@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useNotes } from "@/zustand/notes";
 import { LogOutIcon, UserIcon } from "@/components/icons/Icons";
 import { nanoid } from "nanoid";
-import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,29 +16,20 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useAuth } from "@/context/AuthProvider";
 import Avatar from "@/components/avatar";
-import LoadingSpinner from "@/components/loader";
 import Notes from "@/components/notes";
 import { create } from "@/app/actions/notes";
 import { useRef } from "react";
 import { handleSignOut } from "@/app/login/actions";
 import { LogIn } from "lucide-react";
 import { CreditCard } from "lucide-react";
-import { useTheme } from "@/context/ThemeProvider";
-import { Sun } from "lucide-react";
-import { Moon } from "lucide-react";
-import { Laptop } from "lucide-react";
+import Tabs from "@/components/Tabs";
 
 export default function Sidebar({ active }) {
   const router = useRouter();
   const supabase = createClient();
 
-  const {
-    saveNote,
-    editNote,
-    deleteNote,
-  } = useNotes(state => state.actions);
+  const { saveNote, editNote, deleteNote } = useNotes((state) => state.actions);
   const titleFormRef = useRef(null);
-  const { theme, setTheme } = useTheme();
   const { user } = useAuth();
 
   const defaultContent = {
@@ -54,8 +44,11 @@ export default function Sidebar({ active }) {
 
   return (
     <div
-    tabIndex={0}
-     className={`fixed bg-white/95 dark:bg-[#121212] sm:bg-transparent dark:sm:bg-transparent z-20 sm:z-0 sm:static transition-all overflow-hidden duration-300 border-[#ddd] dark:border-[#212121] h-full ${active ? "w-0 p-0 border-0 sm:w-75 sm:p-2 sm:border-r" : "w-70 p-2 border-r sm:w-0 sm:p-0 sm:border-0"} flex flex-col text-nowrap select-none`}>
+      tabIndex={0}
+      // transition-all duration-300
+      style={{ transition: "width 0.3s ease-in-out, padding 0.3s ease-in-out" }}
+      className={`fixed bg-white/95 dark:bg-[#121212] sm:bg-transparent dark:sm:bg-transparent z-20 sm:z-0 sm:static  overflow-hidden border-[#ddd] dark:border-[#212121] h-full ${active ? "w-0 p-0 border-0 sm:w-75 sm:p-2 sm:border-r" : "w-70 p-2 border-r sm:w-0 sm:p-0 sm:border-0"} flex flex-col text-nowrap select-none`}
+    >
       <form
         ref={titleFormRef}
         action={async (formData) => {
@@ -78,9 +71,7 @@ export default function Sidebar({ active }) {
           } else {
             editNote(note.id, response.data);
           }
-
         }}
-
         className="flex flex-col gap-2"
       >
         <input
@@ -116,7 +107,7 @@ export default function Sidebar({ active }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent
           sideOffset={4}
-          className={"font-inter mb-2 lg:w-[16rem] drop-shadow-xs"}
+          className={"font-inter w-[17rem] mb-2 drop-shadow-xs"}
         >
           <DropdownMenuLabel>
             {user ? user.user_metadata.email : "My Account"}
@@ -153,40 +144,14 @@ export default function Sidebar({ active }) {
             Preferences
           </DropdownMenuLabel>
 
-          <DropdownMenuItem className="flex justify-between items-center">
-            <span>Theme</span>
-            <div className="flex justify-around items-center gap-1.5 border border-[#ddd] dark:border-[#444] rounded-md px-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTheme("system");
-                }}
-                className={`p-0.5 px-1.5 rounded-full ${theme === "system" ? "bg-blue-500 text-white" : "text-gray-700 dark:text-gray-400"}`}
-              >
-                <Laptop className="w-4 h-4 text-inherit" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTheme("light");
-                }}
-                className={`p-0.5 px-1 rounded-full ${theme === "light" ? "bg-blue-500 text-white" : "text-gray-700 dark:text-gray-400"}`}
-              >
-                <Sun className="w-4 h-4 text-inherit" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTheme("dark");
-                }}
-                className={`p-0.5 px-1 rounded-full ${theme === "dark" ? "bg-blue-500 text-white" : "text-gray-700 dark:text-gray-400"}`}
-              >
-                <Moon className="w-4 h-4 text-inherit" />
-              </button>
+          <div className="flex flex-col gap-1 text-sm px-2 pb-2 select-none">
+            <div className="flex justify-between items-center">
+              <span>Theme</span>
+              <Tabs />
             </div>
-          </DropdownMenuItem>
+            <div>Language</div>
+          </div>
 
-          <DropdownMenuItem>Language</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
