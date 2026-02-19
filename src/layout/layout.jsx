@@ -16,11 +16,11 @@ export default function Layout() {
       <ThemeProvider mounted={mounted}>
         <TooltipProvider>
           <SidebarProvider>
-            <div className="relative flex w-screen h-dvh text-sm bg-white dark:bg-[#111] text-text overflow-hidden">
+            <div className="relative flex w-screen h-dvh text-sm bg-white dark:bg-[#111] overflow-hidden">
             
               <AppSidebar />
 
-              <div className="flex w-full">
+              <div className="flex flex-col sm:flex-row w-full">
                 <SidebarTrigger className="m-4" />
                 <div className="w-full">
                   <Editor />

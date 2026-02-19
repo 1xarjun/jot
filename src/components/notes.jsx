@@ -136,7 +136,7 @@ export default function Notes({ notes }) {
 								}}
 								className={`${focusingNote?.id === note.id ? "bg-gray-100 dark:bg-[#222]" : null} focus-visible:outline-offset-4 focus-visible:outline-outline cursor-default w-full border rounded-md px-2 py-1 overflow-hidden shadow-xs`}
 							>
-								<p className="truncate text-text">
+								<p className="truncate">
 									{note.title}
 								</p>
 								<div className="flex justify-between items-center">
