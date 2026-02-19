@@ -9,9 +9,9 @@ import { toast } from "sonner";
 import { XIcon } from "lucide-react";
 import { useAuth } from "@/context/AuthProvider";
 
-export default function Notes() {
-	const { notes, focusingNote } = useNotes();
-	const { saveNote, focusNote, unfocusNote, deleteNote, updateNotes } =
+export default function Notes({ notes }) {
+	const { focusingNote } = useNotes();
+	const { focusNote, unfocusNote, deleteNote, updateNotes } =
 		useNotes((state) => state.actions);
 
 	const [loading, setLoading] = useState(false);
@@ -27,7 +27,7 @@ export default function Notes() {
 				updateNotes(result.data);
 			} else {
 				toast(
-					<div className="flex gap-4 font-inter items-center">
+					<div className="flex gap-4 items-center">
 						<div className="flex items-center">
 							<XIcon className={"text-red-500"} />
 						</div>
@@ -45,6 +45,8 @@ export default function Notes() {
 
 			setLoading(false);
 		};
+
+		if(user && notes.length > 0) return; // if notes exists already, then no need to fetch again
 
 		if (user) {
 			fetchContent();
@@ -102,7 +104,7 @@ export default function Notes() {
 
 	return (
 		<>
-			<ul className="flex flex-col h-full overflow-y-auto gap-2 p-2 scroll-smooth scrollbar-thin">
+			<ul className="flex flex-col h-full gap-2 py-2 scroll-smooth">
 				{loading ? (
 					<div className="w-full h-full flex justify-center items-center">
 						<LoadingSpinner />
@@ -132,7 +134,7 @@ export default function Notes() {
 										focusNote(note);
 									}
 								}}
-								className={`${focusingNote?.id === note.id ? "bg-gray-50 dark:bg-[#171717]" : null} focus-visible:outline-offset-4 focus-visible:outline-outline cursor-default w-full border rounded-md px-2 py-1 overflow-hidden shadow-xs`}
+								className={`${focusingNote?.id === note.id ? "bg-gray-100 dark:bg-[#222]" : null} focus-visible:outline-offset-4 focus-visible:outline-outline cursor-default w-full border rounded-md px-2 py-1 overflow-hidden shadow-xs`}
 							>
 								<p className="truncate text-text">
 									{note.title}

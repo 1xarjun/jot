@@ -16,7 +16,7 @@ export default async function Signup() {
     }
 
     return (
-        <div className='flex min-h-screen p-4 bg-gray-50 justify-center items-center font-inter'>
+        <div className='flex min-h-screen p-4 bg-gray-50 justify-center items-center'>
             <div className='bg-white w-md h-full border border-[#ddd] shadow-sm rounded-md px-6 py-8 text-sm text-gray-800 flex flex-col gap-4'>
                 <div className='mb-2'>
                     <span className='text-2xl font-bold'>Sign up</span>

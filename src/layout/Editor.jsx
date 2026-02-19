@@ -152,7 +152,7 @@ export default function Editor() {
 
     const timeoutId = setTimeout(async () => {
       const toastId = toast(
-        <div className="flex gap-4 font-inter items-center">
+        <div className="flex gap-4 items-center">
           <div className="flex items-center">
             <LoadingSpinner className={"text-gray-700 dark:text-gray-300"} />
           </div>
@@ -181,7 +181,7 @@ export default function Editor() {
 
       if (response.success) {
         toast(
-          <div className="flex gap-4 font-inter">
+          <div className="flex gap-4">
             <div className="flex items-center">
               <Check className="w-6 h-6 text-green-500" />
             </div>
@@ -197,7 +197,7 @@ export default function Editor() {
         );
       } else {
         toast(
-          <div className="flex gap-4 items-center font-inter">
+          <div className="flex gap-4 items-center">
             <div className="flex items-center">
               <XIcon className="w-6 h-6 text-red-500" />
             </div>
@@ -271,7 +271,7 @@ export default function Editor() {
     <div
       ref={editorRef}
       onScroll={handleScroll}
-      className="w-full h-full border-0 flex-1 py-4 px-4 sm:px-6 text-wrap overflow-y-scroll scrollbar-thin"
+      className="w-full h-full border-0 flex-1 py-4 px-4 sm:px-6 text-wrap overflow-y-scroll"
     >
       <Toaster theme={theme} />
 
@@ -281,16 +281,16 @@ export default function Editor() {
           maxLength={50}
           value={title}
           onChange={handleTitleChange}
-          className="focus:outline-0 h-10 text-center text-gray-800 dark:text-gray-200 font-light text-xl mb-2.5 w-full"
+          className=" focus:outline-0 h-6 text-center text-gray-800 dark:text-gray-200 text-lg mb-4 w-full"
         />
       </div>
       <div
         ref={buttonBarRef}
-        className="mb-6 w-[22rem] sm:w-[60rem] mx-auto flex gap-2 overflow-x-scroll sm:overflow-hidden sm:flex-wrap"
+        className=" mb-4 w-[22rem] sm:w-[60rem] mx-auto flex gap-2 overflow-x-scroll sm:overflow-hidden sm:flex-wrap"
       >
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() => editor?.chain().focus().toggleBold().run()}
           className={`${editor?.isActive("bold") ? "selected" : "active:bg-gray-100 hover:bg-gray-50"}`}
         >
@@ -298,7 +298,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() => editor?.chain().focus().toggleUnderline().run()}
           className={
             editor?.isActive("underline")
@@ -310,7 +310,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() => editor?.chain().focus().toggleItalic().run()}
           className={
             editor?.isActive("italic")
@@ -322,7 +322,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() =>
             editor?.chain().focus().toggleHeading({ level: 1 }).run()
           }
@@ -336,7 +336,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() =>
             editor?.chain().focus().toggleHeading({ level: 2 }).run()
           }
@@ -350,7 +350,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() =>
             editor?.chain().focus().toggleHeading({ level: 3 }).run()
           }
@@ -364,7 +364,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
           className={
             editor?.isActive("bulletList")
@@ -376,7 +376,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           className={
             editor?.isActive("orderedList")
@@ -388,7 +388,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           className={
             editor?.isActive("blockquote")
@@ -400,7 +400,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() => editor?.chain().focus().setHorizontalRule().run()}
           className="active:bg-gray-100 hover:bg-gray-50"
         >
@@ -408,7 +408,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={handleImage}
           className={
             editor?.isActive("image")
@@ -420,7 +420,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() => handleLink()}
           className={
             editor?.isActive("link")
@@ -432,7 +432,7 @@ export default function Editor() {
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-sm"
           onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
           className={
             editor?.isActive("codeBlock")
@@ -443,7 +443,7 @@ export default function Editor() {
           <Code />
         </Button>
       </div>
-      <EditorContent editor={editor} className="text-[16px] font-sans" />
+      <EditorContent editor={editor} className="text-sm font-sans" />
     </div>
   );
 }

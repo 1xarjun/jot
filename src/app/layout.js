@@ -1,16 +1,9 @@
-import { Geist_Mono } from "next/font/google";
-import { Inter } from "next/font/google";
-import { Open_Sans } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import MountProvider from "@/context/mount-provider";
 
 const inter = Inter({
   variable: "--font-inter-sans",
-  subsets: ["latin"],
-});
-
-const open = Open_Sans({
-  variable: "--font-open-sans",
   subsets: ["latin"],
 });
 
@@ -46,7 +39,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body
-        className={`${inter.variable} ${open.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${geistMono.variable} antialiased text-sm`}
       >
         <MountProvider>{children}</MountProvider>
       </body>

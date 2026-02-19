@@ -20,6 +20,7 @@ export const useNotes = create(
                 },
 
                 saveNote: (note) => {
+                    if(!note.id || !note.title) return;
                     set((state) => ({ notes: [...state.notes, note] }));
                 },
 

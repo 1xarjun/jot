@@ -19,7 +19,7 @@ export default async function Login() {
     }
 
     return (
-        <div className="flex min-h-screen px-4 py-12 bg-gray-50 justify-center items-center font-inter">
+        <div className="flex min-h-screen px-4 py-12 bg-gray-50 justify-center items-center">
             <div className="bg-white w-md h-full border border-[#ddd] shadow-sm rounded-md px-6 py-8 text-sm text-gray-800 flex flex-col gap-4">
                 <div className="mb-2">
                     <span className="text-2xl font-bold">Sign in</span>
@@ -44,14 +44,14 @@ export default async function Login() {
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <div className="flex justify-between font-medium">
+                            <div className="flex justify-start font-medium">
                                 <label>Password</label>
-                                <Link
+                                {/* <Link
                                     href="forgot-password"
                                     className="underline-offset-4 hover:underline"
                                 >
                                     Forgot password
-                                </Link>
+                                </Link> */}
                             </div>
                             <input
                                 name="password"
