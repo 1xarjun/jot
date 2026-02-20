@@ -20,7 +20,7 @@ export default function Layout() {
             
               <AppSidebar />
 
-              <div className="flex flex-col sm:flex-row w-full">
+              <div className="flex flex-col sm:flex-row w-full overflow-y-auto">
                 <SidebarTrigger className="m-4" />
                 <div className="w-full">
                   <Editor />
