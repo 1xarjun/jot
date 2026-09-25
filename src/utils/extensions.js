@@ -1,8 +1,7 @@
 "use client";
 
-import Link from '@tiptap/extension-link';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import Image from '@tiptap/extension-image';
+import { StarterKit } from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import TextAlign from '@tiptap/extension-text-align';
 
-export { Link, StarterKit, Underline, Image };
+export { StarterKit, Placeholder, TextAlign };

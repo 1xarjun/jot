@@ -1,1 +1,0 @@
-This is a simple note taking application which uses supabase for authentication and database too and rest is handled by nextjs, will update the readme later

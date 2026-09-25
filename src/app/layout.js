@@ -1,6 +1,7 @@
 import { Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import MountProvider from "@/context/mount-provider";
+import Providers from "@/context/providers";
+import ThemeProvider from "@/context/ThemeProvider";
 
 const inter = Inter({
   variable: "--font-inter-sans",
@@ -13,19 +14,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Simply Note",
+  title: "Jot",
   description:
     "A simple note taking application to store your sweet notes and ideas.",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
-          (function() {
+            (function() {
                 const localTheme = localStorage.getItem('simply-note-theme') || 'system'
                 const html = document.documentElement;
                 if(localTheme === 'dark' || (localTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -38,10 +39,10 @@ export default function RootLayout({ children }) {
           }}
         />
       </head>
-      <body
-        className={`${inter.variable} ${geistMono.variable} antialiased text-sm`}
-      >
-        <MountProvider>{children}</MountProvider>
+      <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider>
+          <Providers>{children}</Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

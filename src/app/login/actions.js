@@ -1,11 +1,12 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export async function handleEmailLogin(formData) {
-	const supabase = await createClient();
+	const cookieStore = await cookies();
+	const supabase = createClient(cookieStore);
 
 	const data = {
 		email: formData.get("email"),
@@ -15,19 +16,17 @@ export async function handleEmailLogin(formData) {
 	const { error } = await supabase.auth.signInWithPassword(data);
 
 	if (error) {
-		console.error(error);
-		return redirect("/login");
+		console.error('error while logging in through email: ', error.message);
+    return redirect(`/login?error=${encodeURIComponent(error.message)}&t=${Date.now()}`)
 	}
 
-	revalidatePath("/", "layout");
 	return redirect("/");
 }
 
 export async function handleSignUp(formData) {
-	const supabase = await createClient();
+	const cookieStore = await cookies();
+	const supabase = createClient(cookieStore);
 
-	// type-casting here for convenience
-	// in practice, you should validate your inputs
 	const data = {
 		email: formData.get("email"),
 		password: formData.get("password"),
@@ -38,37 +37,37 @@ export async function handleSignUp(formData) {
 		},
 	};
 
+
 	const { error } = await supabase.auth.signUp(data);
 
-	// auto confirmation is off so it will return a user if everything is okay which means it can't stay in /login so it will go to => /
+	// email confirmation is off so it will return a authenticated session if everything is okay it will go to /
 
-	if (error) {
-		return redirect("/login");
-	}
+  if (error) {
+    console.error('error while signing up through email: ', error.message);
+    return redirect(`/signup?error=${encodeURIComponent(error.message)}&t=${Date.now()}`)
+  }
 
-	revalidatePath("/", "layout");
-
-	// user needs to sign in before going to the app route
-	return redirect("/login");
+  return redirect("/");
 }
 
 export async function handleSignOut() {
-	const supabase = await createClient();
+	const supabase = createClient(await cookies());
+	const { error }	= await supabase.auth.signOut();
 
-	await supabase.auth.signOut();
-
-	// return redirect("/login");
-	revalidatePath("/", "page");
-	// i want to stay there even when the user is logged off
+	if (error) {
+    console.error('error while signing out: ', error.message);
+    return redirect(`/?error=${encodeURIComponent(error.message)}&t=${Date.now()}`)
+	}
 }
 
 export async function handleOAuth(provider) {
 	if (!provider) {
-		// should return error but for now it's not needed
-		redirect("/login");
+	  console.error('Invalid provider: ', provider)
+    return redirect(`/login?error=${encodeURIComponent("Invalid provider")}&t=${Date.now()}`)
 	}
 
-	const supabase = await createClient();
+	const cookieStore = await cookies();
+	const supabase = createClient(cookieStore);
 
 	const redirectURL = process.env.NEXT_PUBLIC_SUPABASE_REDIRECT_URL
 		? `${process.env.NEXT_PUBLIC_SUPABASE_REDIRECT_URL}/auth/callback`
@@ -83,7 +82,7 @@ export async function handleOAuth(provider) {
 
 	if (error) {
 		console.error(error.message);
-		return redirect("/login");
+		return redirect(`/login?error=${encodeURIComponent(error.message)}&t=${Date.now()}`)
 	}
 
 	return redirect(data.url);

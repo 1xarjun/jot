@@ -9,7 +9,7 @@ const ThemeContext = createContext({
 	setTheme: () => null
 })
 
-export default function ThemeProvider({ children, mounted, defaultTheme='system', key='simply-note-theme', ...props }) {
+export default function ThemeProvider({ children, defaultTheme='system', key='simply-note-theme', ...props }) {
 
 	const [theme, setTheme] = useState(defaultTheme)
 
@@ -20,8 +20,6 @@ export default function ThemeProvider({ children, mounted, defaultTheme='system'
 		if(localTheme) setTheme(localTheme)
 
 	}, [key])
-
-	// TODO: still some glitch pops up in themeing if i go to a different page
 
 	useEffect(() => {
 		const html = document.documentElement
@@ -36,8 +34,6 @@ export default function ThemeProvider({ children, mounted, defaultTheme='system'
 
 			html.classList.add(theme)
 			html.style.colorScheme=theme
-		// return {
-		// }
 
 	}, [theme])
 
@@ -58,6 +54,5 @@ export default function ThemeProvider({ children, mounted, defaultTheme='system'
 
 export function useTheme() {
 	const objects = useContext(ThemeContext)
-
 	return objects
 }

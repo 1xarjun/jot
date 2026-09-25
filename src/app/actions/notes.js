@@ -1,149 +1,138 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
-import util from "util";
-
-// const supabase = await createClient();
-
-// TODO: ui update
+import { cookies } from "next/headers";
 
 export async function fetchAll() {
-	const supabase = await createClient();
-	const { data, error } = await supabase
-		.from("notes")
-		.select("*")
-		.order("created_at", { ascending: true });
+  const supabase = createClient(await cookies());
+  const { data, error } = await supabase
+    .from("notes")
+    .select("*")
+    .order("created_at", { ascending: true });
 
-	if (error) {
-		return { success: false, message: error.message };
-	}
+  if (error) {
+    console.error(error.message ?? "Failed to fetch notes")
+    return { success: false, message: error.message };
+  }
 
-	const notes = data.map(
-		// destructuring each object then storing only the rest
-		({ user_id, ...rest }) => rest,
-	);
+  const notes = data.map(({ user_id, ...rest }) => rest);
 
-	revalidatePath("/");
-
-	return { success: true, data: notes };
+  return { success: true, data: notes };
 }
 
-export async function create(formData) {
-	const defaultContent = {
-		type: "doc",
-		content: [
-			{
-				type: "paragraph",
-				content: [
-					{ type: "text", text: "Type here to get started..." },
-				],
-			},
-		],
-	};
+export async function fetchShared() {
+  const supabase = createClient(await cookies());
+  const { data: sharedEntries, error } = await supabase
+    .from("shared")
+    .select("*");
 
-	const note = {
-		title: formData.get("title"),
-		content: defaultContent,
-	};
-
-	if (!note.title)
-		return {
-			success: false,
-			message: "title must be valid",
-		};
-
-	const supabase = await createClient();
-
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-
-	if (!user) {
-		throw new Error("user is not logged in!");
-	}
-
-	const { data, error } = await supabase
-		.from("notes")
-		.insert({
-			...note,
-			user_id: user.id,
-		})
-		.select(); // to get the inserted note
-
-	if (error) {
-		return { success: false, message: error.message };
-	}
-
-	const { user_id, ...newEntry } = data[0];
-
-	revalidatePath("/");
-
-	return { success: true, data: newEntry };
+  if (error) {
+    console.error(error.message ?? "Failed to fetch shared entries")
+    return { success: false, message: error.message };
+  }
+  return { success: true, data: sharedEntries };
 }
 
-export async function update(note) {
-	if (!note.id || !note.content)
-		return {
-			success: false,
-			message: "either id or content is not valid",
-		};
-
-	// sent json because of image attr showing as an anonymous function
-	const content = JSON.parse(note.content)
-
-	const entry = {...note, content}
-
-	const supabase = await createClient();
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-
-	const { data, error } = await supabase
-		.from("notes")
-		.update(entry)
-		.match({
-			id: note.id,
-			user_id: user.id,
-		})
-		.select();
-
-	if (error) {
-		return { success: false, message: error.message };
-	}
-
-	const { user_id, ...updatedEntry } = data[0];
-
-	revalidatePath("/");
-
-	return { success: true, data: updatedEntry, message: 'Updated successfully!' };
+export async function fetchSharedNoteByToken(token) {
+  if (!token) return { success: false, message: "Invalid request" };
+  const supabase = createClient(await cookies());
+  const { data, error } = await supabase.rpc("get_shared_note", {
+    s_token: token,
+  });
+  if (error) return { success: false, message: error.message };
+  return { success: true, data };
 }
 
-export async function remove(note) {
-	if (!note.id) return { success: false, message: "id must be valid" };
+export async function revokeAccess(token) {
+  const supabase = createClient(await cookies());
+  const { error } = await supabase.rpc("revoke_access_to_shared_note", {
+    s_token: token
+  });
+  if (error) return { success: false, message: error.message };
+  return { success: true };
+  }
 
-	const supabase = await createClient();
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-	const { data, error } = await supabase
-		.from("notes")
-		.delete()
-		.match({
-			id: note.id,
-			user_id: user.id,
-		})
-		.select();
+export async function share(sharedEntry) {
+  if (!sharedEntry.note_id || !sharedEntry.expired_at)
+    return {
+      success: false,
+      message: "Invalid request",
+    };
 
-	if (error) {
-		return { success: false, message: error.message };
-	}
+  const entry = {
+    created_at: new Date().toISOString(),
+    ...sharedEntry,
+  };
 
-	const { user_id, ...deletedEntry } = data[0];
+  const supabase = createClient(await cookies());
 
-	revalidatePath("/");
+  const { data, error } = await supabase.from("shared").insert(entry).select();
 
-	return { success: true, data: deletedEntry };
+  if (error) return { success: false, message: error.message };
+
+  const shared_entry = data[0];
+
+  return { success: true, data: shared_entry };
+}
+
+export async function create(note) {
+  if (!note.title)
+    return {
+      success: false,
+      message: "Title must be valid",
+    };
+
+  const supabase = createClient(await cookies());
+
+  const { data, error } = await supabase
+    .from("notes")
+    .insert({
+      ...note,
+    })
+    .select(); // to get the inserted note
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
+  const { user_id, ...newEntry } = data[0];
+
+  return { success: true, data: newEntry };
+}
+
+export async function update(id, data) {
+  if (!id)
+    return {
+      success: false,
+      message: "Note id is not valid",
+    };
+
+  const supabase = createClient(await cookies());
+
+  const { error } = await supabase
+    .from("notes")
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
+  return { success: true, message: "Updated successfully!" };
+}
+
+export async function remove(id) {
+  if (!id) return { success: false, message: "Note id must be valid" };
+
+  const supabase = createClient(await cookies());
+
+  const { error } = await supabase.from("notes").delete().eq("id", id);
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
+  return { success: true };
 }
 
 // this returns plain objects since nextjs can send only plain objects from server components so NextResponse.json() only will work for api route.js

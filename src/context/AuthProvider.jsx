@@ -17,9 +17,9 @@ export default function AuthProvider({ children }) {
 			const { data, error } = await supabase.auth.getSession();
 
 			if (error) {
-				console.error('Error fetching session: ', error.message);
-			} else {
-				setUser(data?.session?.user || null);
+        console.error('Error fetching session: ', error.message);
+      } else {
+				setUser(data.session?.user || null);
 			}
 		}
 

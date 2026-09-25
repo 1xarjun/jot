@@ -1,0 +1,11 @@
+[
+  {
+    "label": "save all and open port 3000",
+    "command": "start http://localhost:3000",
+    "hide": "on_success",
+    "save": "all",
+    "shell": {
+      "program": "cmd.exe"
+    }
+  }
+]
