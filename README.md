@@ -2,6 +2,7 @@
 
 <div align="center">
     Minimal yet with all the functionalities you want in a note taking app.
+
 [Web App](https://1xjot.vercel.app)
 </div>
 
@@ -14,3 +15,5 @@
 - pin notes for better separation and organization
 - toggle between light and dark theme
 - rich text editing via tiptap
+- toolbar ui for easy access to all the formatting options
+  (you can toggle the opacity to get a transparent look)
