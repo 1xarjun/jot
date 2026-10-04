@@ -7,17 +7,15 @@ export async function fetchAll() {
   const supabase = createClient(await cookies());
   const { data, error } = await supabase
     .from("notes")
-    .select("*")
-    .order("created_at", { ascending: true });
+    .select("id, title, content, created_at, updated_at, pinned")
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error(error.message ?? "Failed to fetch notes")
     return { success: false, message: error.message };
   }
 
-  const notes = data.map(({ user_id, ...rest }) => rest);
-
-  return { success: true, data: notes };
+  return { success: true, data };
 }
 
 export async function fetchShared() {

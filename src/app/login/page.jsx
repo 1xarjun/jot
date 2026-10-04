@@ -13,7 +13,7 @@ import {
 import { Mail } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
-import { handleEmailLogin, handleOAuth } from "./actions";
+import { handleEmailLogin } from "../actions/actions";
 import OAuthProviders from "./oauth-providers";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";

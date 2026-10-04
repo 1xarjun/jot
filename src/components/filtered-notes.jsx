@@ -13,9 +13,8 @@ import { useNotesStore } from "@/context/notes-store-context";
 export default function FilteredNotes() {
   const { id } = useParams();
   const { debouncedEdit } = useCurrentEditor();
-  const { notes: allNotes } = useNotesStore(s=> s);
-  const notes = allNotes?.filter((note) => !note.pinned);
   const [showNotes, setShowNotes] = useState(true);
+  const notes = useNotesStore((s) => s.notes).filter((n) => !n.pinned);
 
   return (
     <div className="group/notes">

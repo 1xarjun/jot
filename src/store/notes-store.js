@@ -27,6 +27,10 @@ export const createNotesStore = (defaultState = {}) => {
         set({ notes: newNotesArray });
       },
 
+      updateShared: (newSharedArray) => {
+        set({ shared: newSharedArray });
+      },
+
       focusNote: (note) => {
         set({ focusingNote: note });
       },

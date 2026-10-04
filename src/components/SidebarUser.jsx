@@ -18,7 +18,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { handleSignOut } from "@/app/login/actions";
+import { handleSignOut } from "@/app/actions/actions";
 import { LogIn } from "lucide-react";
 import { SidebarFooter, SidebarMenuButton, useSidebar } from "./ui/sidebar";
 import Avatar from "./avatar";

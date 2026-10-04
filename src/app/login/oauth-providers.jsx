@@ -2,7 +2,7 @@
 
 import { GithubIcon } from "@/components/icons/Icons";
 import { Button } from "@/components/ui/button";
-import { handleOAuth } from "./actions";
+import { handleOAuth } from "../actions/actions";
 
 export default function OAuthProviders() {
   return (

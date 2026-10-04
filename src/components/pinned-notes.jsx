@@ -13,11 +13,10 @@ import { useNotesStore } from "@/context/notes-store-context";
 export default function PinnedNotes() {
   const { id } = useParams();
   const { debouncedEdit } = useCurrentEditor();
-  const { notes: allNotes } = useNotesStore(s=> s);
-  const notes = allNotes?.filter((note) => note.pinned);
   const [showPinned, setShowPinned] = useState(true);
+  const notes = useNotesStore((s) => s.notes).filter((n) => n.pinned);
 
-  return notes?.length > 0 ? (
+  return notes.length > 0 ? (
     <div className="group/pinned">
       <button
         onClick={() => setShowPinned(!showPinned)}
