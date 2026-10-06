@@ -20,9 +20,11 @@ export default function EditorWrapper({ id = undefined, sharedCopy = undefined }
     if (!editor) return;
     if (note || sharedCopy) {
       editor?.commands.setContent(note?.content ?? sharedCopy?.content, { emitUpdate: false });
+      editor?.setEditable(!sharedCopy);
     } else {
       if (id && !note) router.replace("/");
       editor?.commands.setContent(undefined, { emitUpdate: false });
+      editor?.setEditable(true); // if in blank state
     }
   }, [editor, id, sharedCopy]);
 
@@ -36,7 +38,6 @@ export default function EditorWrapper({ id = undefined, sharedCopy = undefined }
 
         <EditorWrapperHeader focusingNote={note ?? sharedCopy} isShared={!!sharedCopy} />
         <EditorContent
-          readOnly={!!sharedCopy}
           editor={editor}
           className="prose dark:prose-invert max-w-full sm:max-w-xl md:max-w-2xl xl:max-w-3xl mx-auto prose-h1:text-3xl prose-h1:font-bold my-5 md:my-8 px-8 md:px-0 min-h-[calc(100vh-200px)] [&_li>p]:my-0 [&_li]:my-0 [&_p:has(+_ul)]:my-0 [&_p:has(+_ol)]:my-0 [&_:is(ul,ol)]:mt-1.5 [&_:is(ul,ol)]:mb-4 text-foreground"
         />
