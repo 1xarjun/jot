@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 
 export default function EditorWrapper({ id = undefined, sharedCopy = undefined }) {
   const { editor } = useCurrentEditor();
-  const { notes } = useNotesStore((state) => state);
+  const { notes, ready } = useNotesStore((state) => state);
   const note = notes?.find((note) => note.id === id);
   const router = useRouter();
 
@@ -22,11 +22,11 @@ export default function EditorWrapper({ id = undefined, sharedCopy = undefined }
       editor?.commands.setContent(note?.content ?? sharedCopy?.content, { emitUpdate: false });
       editor?.setEditable(!sharedCopy, false);
     } else {
-      if (id && !note) router.replace("/");
+      if (id && ready && !note) router.replace("/");
       editor?.commands.setContent(undefined, { emitUpdate: false });
       editor?.setEditable(true, false); // if in blank state
     }
-  }, [editor, id, sharedCopy]);
+  }, [editor, id, sharedCopy, ready]);
 
 
   return (

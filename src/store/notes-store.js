@@ -11,6 +11,7 @@ export const initialState = {
   focusingNote: null,
   shareDialogIsOpen: false,
   searchOpen: false,
+  ready: false,
   selectedNoteForSharing: null
 };
 
@@ -29,6 +30,10 @@ export const createNotesStore = (defaultState = {}) => {
 
       updateShared: (newSharedArray) => {
         set({ shared: newSharedArray });
+      },
+
+      setReady: (ready) => {
+        set({ ready: typeof ready === "boolean" ? ready : false });
       },
 
       focusNote: (note) => {
