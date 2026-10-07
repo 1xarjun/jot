@@ -20,11 +20,11 @@ export default function EditorWrapper({ id = undefined, sharedCopy = undefined }
     if (!editor) return;
     if (note || sharedCopy) {
       editor?.commands.setContent(note?.content ?? sharedCopy?.content, { emitUpdate: false });
-      editor?.setEditable(!sharedCopy);
+      editor?.setEditable(!sharedCopy, false);
     } else {
       if (id && !note) router.replace("/");
       editor?.commands.setContent(undefined, { emitUpdate: false });
-      editor?.setEditable(true); // if in blank state
+      editor?.setEditable(true, false); // if in blank state
     }
   }, [editor, id, sharedCopy]);
 

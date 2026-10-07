@@ -7,7 +7,7 @@ export async function fetchAll() {
   const supabase = createClient(await cookies());
   const { data, error } = await supabase
     .from("notes")
-    .select("id, title, content, created_at, updated_at, pinned")
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (error) {

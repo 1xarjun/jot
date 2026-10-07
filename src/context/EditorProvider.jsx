@@ -13,8 +13,7 @@ export default function EditorProvider({ children }) {
   const { editNote } = useNotesStore(s => s.actions);
 
   const debouncedEdit = useMemo(
-    () =>
-      debounce(
+    () => debounce(
         (noteId, editor) => editNote(noteId, { content: editor.getJSON() }),
         700,
       ),
