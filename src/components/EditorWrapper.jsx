@@ -7,27 +7,79 @@ import EditorToolbar from "./EditorToolbar";
 import { useCurrentEditor } from "@tiptap/react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Menu } from "lucide-react";
-import { useNotesStore } from "@/context/notes-store-context";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { getNoteById, getSharedNoteByToken } from "@/app/actions/notes";
+import { toast } from "sonner";
+import { Loader } from "lucide-react";
 
-export default function EditorWrapper({ id = undefined, sharedCopy = undefined }) {
+export default function EditorWrapper({ id = undefined, token = undefined }) {
   const { editor } = useCurrentEditor();
-  const { notes, ready } = useNotesStore((state) => state);
-  const note = notes?.find((note) => note.id === id);
   const router = useRouter();
+
+  const {
+    data: note,
+    isLoading: noteLoading,
+    error: noteError,
+  } = useQuery({
+    queryKey: ["note", id],
+    queryFn: async () => {
+      const { success, data, message } = await getNoteById(id);
+      if (!success)
+        throw new Error(message ?? "Error while getting note by id");
+      return data;
+    },
+    enabled: !!id,
+    staleTime: Infinity,
+  });
+
+  const {
+    data: sharedNote,
+    isLoading: sharedNoteLoading,
+    error: sharedNoteError,
+  } = useQuery({
+    queryKey: ["shared_note", token],
+    queryFn: async () => {
+      const { success, data, message } = await getSharedNoteByToken(token);
+      if (!success)
+        throw new Error(message ?? "Error while getting shared note by token");
+      return data;
+    },
+    enabled: !!token,
+    staleTime: Infinity,
+  });
+
+  useEffect(() => {
+    if (noteError || sharedNoteError) {
+      toast.error(
+        noteError.message ??
+          sharedNoteError.message ??
+          "Error while getting note or shared note",
+      );
+      router.replace("/");
+    }
+  }, [noteError, sharedNoteError]);
 
   useEffect(() => {
     if (!editor) return;
-    if (note || sharedCopy) {
-      editor?.commands.setContent(note?.content ?? sharedCopy?.content, { emitUpdate: false });
-      editor?.setEditable(!sharedCopy, false);
+    if (note || sharedNote) {
+      editor?.commands.setContent(note?.content ?? sharedNote?.content, {
+        emitUpdate: false,
+      });
+      editor?.setEditable(!sharedNote, false);
     } else {
-      if (id && ready && !note) router.replace("/");
       editor?.commands.setContent(undefined, { emitUpdate: false });
       editor?.setEditable(true, false); // if in blank state
     }
-  }, [editor, id, sharedCopy, ready]);
+  }, [editor, note, sharedNote]);
 
+  if (noteLoading || sharedNoteLoading) {
+    return (
+      <div className="border w-full h-dvh overflow-hidden flex items-center justify-center">
+        <Loader className="animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-dvh overflow-hidden">
@@ -36,13 +88,17 @@ export default function EditorWrapper({ id = undefined, sharedCopy = undefined }
           <SidebarTrigger icon={<Menu />} />
         </div>
 
-        <EditorWrapperHeader focusingNote={note ?? sharedCopy} isShared={!!sharedCopy} />
+        <EditorWrapperHeader
+          focusingNote={note ?? sharedNote}
+          isShared={!!sharedNote}
+        />
+
         <EditorContent
           editor={editor}
           className="prose dark:prose-invert max-w-full sm:max-w-xl md:max-w-2xl xl:max-w-3xl mx-auto prose-h1:text-3xl prose-h1:font-bold my-5 md:my-8 px-8 md:px-0 min-h-[calc(100vh-200px)] [&_li>p]:my-0 [&_li]:my-0 [&_p:has(+_ul)]:my-0 [&_p:has(+_ol)]:my-0 [&_:is(ul,ol)]:mt-1.5 [&_:is(ul,ol)]:mb-4 text-foreground"
         />
 
-        {!sharedCopy && (
+        {!sharedNote && (
           <div className="w-full sticky bottom-0 sm:pb-6">
             <EditorToolbar editor={editor} />
           </div>

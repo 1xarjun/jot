@@ -2,21 +2,43 @@
 
 import Link from "next/link";
 import Note from "./note";
-import { buttonVariants } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, ChevronRight, Ellipsis, Loader } from "lucide-react";
 import { useCurrentEditor } from "@tiptap/react";
 import { useParams } from "next/navigation";
-import { useNotesStore } from "@/context/notes-store-context";
+import { fetchPinnedNotes } from "@/app/actions/notes";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import NotesSkeleton from "./skeletons/notes-skeleton";
 
 export default function PinnedNotes() {
   const { id } = useParams();
   const { debouncedEdit } = useCurrentEditor();
   const [showPinned, setShowPinned] = useState(true);
-  const notes = useNotesStore((s) => s.notes).filter((n) => n.pinned);
 
-  return notes.length > 0 ? (
+  const { data, isLoading, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage, error } = useInfiniteQuery({
+    queryKey: ["pinned_notes"],
+    queryFn: async ({ pageParam: cursor }) => {
+      const { success, message, data } = await fetchPinnedNotes(cursor);
+      if (!success) throw new Error(message)
+      return data;
+    },
+    initialPageParam: null,
+    getNextPageParam: (prevResponse) => prevResponse?.cursor
+  })
+
+  useEffect(() => {
+    if(isFetchNextPageError) toast.error(error.message)
+  }, [isFetchNextPageError])
+
+  // flattens the notes => notes array of each page is grabbed and joined
+  const notes = data?.pages.flatMap(page => page.notes)
+
+  if (isLoading) return <NotesSkeleton />
+
+  return notes?.length > 0 ? (
     <div className="group/pinned">
       <button
         onClick={() => setShowPinned(!showPinned)}
@@ -40,7 +62,7 @@ export default function PinnedNotes() {
       </button>
       {showPinned && (
         <div className="mt-1.5 flex flex-col gap-0.5">
-          {notes.map((note) => (
+          {notes?.map((note) => (
             <Link
               key={note.id}
               onClick={() => debouncedEdit.flush()}
@@ -50,7 +72,7 @@ export default function PinnedNotes() {
                 buttonVariants({ variant: "ghost" }),
                 `w-full px-2.5 group/item ${
                   id === note.id
-                    ? "bg-accent dark:bg-accent/50 font-extrabold"
+                    ? "bg-accent dark:bg-accent/50"
                     : ""
                 } gap-0.5 font-normal`,
               )}
@@ -58,6 +80,20 @@ export default function PinnedNotes() {
               <Note note={note} />
             </Link>
           ))}
+
+          {hasNextPage && !isFetchingNextPage && (
+            <Button
+              onClick={() => fetchNextPage()}
+              variant="ghost"
+              className="justify-start text-muted-foreground/70 hover:text-muted-foreground font-light"
+              disabled={!!isFetchingNextPage}
+            >
+              <Ellipsis />
+              Load more
+            </Button>
+          )}
+
+          {isFetchingNextPage && <NotesSkeleton />}
         </div>
       )}
     </div>

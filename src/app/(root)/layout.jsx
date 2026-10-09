@@ -14,14 +14,14 @@ import { cookies } from "next/headers";
 
 export default async function RootLayout({ children }) {
 
-    const supabase = createClient(await cookies());
-    const { data: { session } } = await supabase.auth.getSession();
-
-    const serverPromise = Promise.all([
-      session?.user ? fetchAll() : Promise.resolve({ success: true, data: [] }),
-      session?.user ? fetchShared() : Promise.resolve({ success: true, data: [] })
-    ]);
-
+//     const supabase = createClient(await cookies());
+//     const { data: { session } } = await supabase.auth.getSession();
+//
+//     const serverPromise = Promise.all([
+//       session?.user ? fetchAll() : Promise.resolve({ success: true, data: [] }),
+//       session?.user ? fetchShared() : Promise.resolve({ success: true, data: [] })
+//     ]);
+//
     return (
     <NotesStoreProvider initialValue={{ notes: [], shared: [] }}>
     <EditorProvider>
@@ -29,7 +29,8 @@ export default async function RootLayout({ children }) {
           <SidebarWrapper>
             <SidebarContentWrapper>
               <Suspense fallback={<NotesSkeleton />}>
-                <NotesWrapper promise={serverPromise} />
+                  <NotesWrapper />
+                  {/* promise={serverPromise}*/}
               </Suspense>
             </SidebarContentWrapper>
             <Suspense fallback={<UserSkeleton />}>

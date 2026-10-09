@@ -1,20 +1,43 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Ellipsis, Loader } from "lucide-react";
 import Note from "./note";
 import { ShowEmpty } from "./constants";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { useCurrentEditor } from "@tiptap/react";
-import { useNotesStore } from "@/context/notes-store-context";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { fetchNotes } from "@/app/actions/notes";
+import { toast } from "sonner";
+import NotesSkeleton from "./skeletons/notes-skeleton";
 
 export default function FilteredNotes() {
   const { id } = useParams();
   const { debouncedEdit } = useCurrentEditor();
   const [showNotes, setShowNotes] = useState(true);
-  const notes = useNotesStore((s) => s.notes).filter((n) => !n.pinned);
+
+  const { data, isLoading, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage, error } = useInfiniteQuery({
+    queryKey: ["filtered_notes"],
+    queryFn: async ({ pageParam: cursor }) => {
+      const { success, message, data } = await fetchNotes(cursor);
+      if (!success) throw new Error(message)
+      return data;
+    },
+    initialPageParam: null,
+    getNextPageParam: (prevResponse) => prevResponse?.cursor
+  })
+
+  useEffect(() => {
+    if(isFetchNextPageError) toast.error(error.message)
+  }, [isFetchNextPageError])
+
+  // flattens the notes => notes array of each page is grabbed and joined
+  const notes = data?.pages.flatMap(page => page.notes)
+
+  if(isLoading) return <NotesSkeleton />
 
   return (
     <div className="group/notes">
@@ -50,14 +73,35 @@ export default function FilteredNotes() {
                   href={`/n/${note.id}`}
                   className={cn(
                     buttonVariants({ variant: "ghost" }),
-                    `w-full px-2.5 group/item ${id === note.id ? "bg-accent dark:bg-accent/50 font-extrabold" : ""} gap-0.5 font-normal`,
+                    `w-full px-2.5 group/item ${id === note.id ? "bg-accent dark:bg-accent/50" : ""} gap-0.5 font-normal`,
                   )}
                 >
                   <Note note={note} />
                 </Link>
               ))}
+
+          {hasNextPage && !isFetchingNextPage && (
+            <Button
+              onClick={() => fetchNextPage()}
+              variant="ghost"
+              className="justify-start text-muted-foreground/70 hover:text-muted-foreground font-light"
+              disabled={!!isFetchingNextPage}
+            >
+              <Ellipsis />
+              Load more
+            </Button>
+          )}
+
+          {isFetchingNextPage && <NotesSkeleton />}
         </div>
       )}
     </div>
   );
 }
+//
+// {isFetchingNextPage ? (
+//   <span className="w-full flex items-center gap-2.5">
+//     <Loader className="animate-spin" />
+//     {"Loading more..."}
+//   </span>
+// ) : (
