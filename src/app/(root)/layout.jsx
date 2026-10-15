@@ -7,10 +7,7 @@ import NotesStoreProvider from "@/context/notes-store-provider";
 import EditorProvider from "@/context/EditorProvider";
 import Search from "@/components/search";
 import NotesWrapper from "@/components/sidebar/notes-wrapper";
-import NotesSkeleton from "@/components/skeletons/notes-skeleton";
-import { fetchAll, fetchShared } from "../actions/notes";
-import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
+import ShareDialog from "@/components/share-dialog";
 
 export default async function RootLayout({ children }) {
 
@@ -23,24 +20,22 @@ export default async function RootLayout({ children }) {
 //     ]);
 //
     return (
-    <NotesStoreProvider initialValue={{ notes: [], shared: [] }}>
-    <EditorProvider>
-        <div className="text-sm text-foreground bg-background w-full h-dvh overflow-hidden flex">
-          <SidebarWrapper>
-            <SidebarContentWrapper>
-              <Suspense fallback={<NotesSkeleton />}>
-                  <NotesWrapper />
-                  {/* promise={serverPromise}*/}
+      <NotesStoreProvider initialValue={{ notes: [], shared: [] }}>
+        <EditorProvider>
+          <div className="text-sm text-foreground bg-background w-full h-dvh overflow-hidden flex">
+            <SidebarWrapper>
+              <SidebarContentWrapper>
+                <NotesWrapper />
+              </SidebarContentWrapper>
+              <Suspense fallback={<UserSkeleton />}>
+                <SidebarFooterWrapper />
               </Suspense>
-            </SidebarContentWrapper>
-            <Suspense fallback={<UserSkeleton />}>
-              <SidebarFooterWrapper />
-            </Suspense>
-          </SidebarWrapper>
-          <Search />
-          <main className="w-full">{children}</main>
-        </div>
-      </EditorProvider>
-    </NotesStoreProvider>
-  );
+            </SidebarWrapper>
+            <Search />
+            <ShareDialog />
+            <main className="w-full">{children}</main>
+          </div>
+        </EditorProvider>
+      </NotesStoreProvider>
+    );
 }

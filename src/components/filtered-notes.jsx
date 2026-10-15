@@ -19,7 +19,7 @@ export default function FilteredNotes() {
   const { debouncedEdit } = useCurrentEditor();
   const [showNotes, setShowNotes] = useState(true);
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage, error } = useInfiniteQuery({
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage, error } = useInfiniteQuery({
     queryKey: ["filtered_notes"],
     queryFn: async ({ pageParam: cursor }) => {
       const { success, message, data } = await fetchNotes(cursor);
@@ -31,13 +31,13 @@ export default function FilteredNotes() {
   })
 
   useEffect(() => {
-    if(isFetchNextPageError) toast.error(error.message)
-  }, [isFetchNextPageError])
+    if(error) toast.error(error.message)
+  }, [error])
+
+  if(isLoading) return <NotesSkeleton />
 
   // flattens the notes => notes array of each page is grabbed and joined
   const notes = data?.pages.flatMap(page => page.notes)
-
-  if(isLoading) return <NotesSkeleton />
 
   return (
     <div className="group/notes">
@@ -46,7 +46,7 @@ export default function FilteredNotes() {
         className="w-full flex items-start px-2.5 font-semibold group/button"
       >
         <span className="flex items-center gap-0.5 text-muted-foreground">
-          Notes
+          Recents
           <span
             className={cn(
               "transition-opacity",
@@ -98,10 +98,3 @@ export default function FilteredNotes() {
     </div>
   );
 }
-//
-// {isFetchingNextPage ? (
-//   <span className="w-full flex items-center gap-2.5">
-//     <Loader className="animate-spin" />
-//     {"Loading more..."}
-//   </span>
-// ) : (

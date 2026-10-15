@@ -42,6 +42,27 @@ export async function fetchNotes(cursor) {
   };
 }
 
+export async function searchNotes(query) {
+  const search = query?.trim();
+
+  if (!search) return { success: true, data: [] };
+
+  const supabase = createClient(await cookies());
+  const { data, error } = await supabase
+    .from("notes")
+    .select("id, title, created_at, updated_at, pinned")
+    .ilike("title", `%${search}%`)
+    .order("updated_at", { ascending: false })
+    .limit(5);
+
+  if (error) {
+    console.error("error while searching notes: ", error.message);
+    return { success: false, message: error.message ?? "Error while searching notes" };
+  }
+
+  return { success: true, data };
+}
+
 export async function fetchPinnedNotes(cursor) {
  	const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
@@ -117,8 +138,21 @@ export async function fetchShared() {
   return { success: true, data: sharedEntries };
 }
 
+export async function getSharedEntry(id) {
+  if (!id) return { success: false, message: "Invalid request" };
+  const supabase = createClient(await cookies());
+  const { data, error } = await supabase.from("shared")
+    .select("id, expired_at, token") // note:notes(id, title) left join is needed for now
+    .eq("note_id", id).maybeSingle();
+  if (error) {
+    console.error(error.message ?? "Failed to fetch shared entry");
+    return { success: false, message: error.message }
+  };
+  return { success: true, data };
+}
+
 export async function getSharedNoteByToken(token) {
-  if (!token) throw new Error("Invalid request");
+  if (!token) return { success: false, message: "Invalid request" };
   const supabase = createClient(await cookies());
   const { data, error } = await supabase.rpc("get_shared_note", {
     s_token: token,
@@ -182,9 +216,7 @@ export async function create(note) {
     return { success: false, message: error.message };
   }
 
-  const { user_id, ...newEntry } = data[0];
-
-  return { success: true, data: newEntry };
+  return { success: true, data: data?.[0] };
 }
 
 export async function update(id, data) {
@@ -196,16 +228,16 @@ export async function update(id, data) {
 
   const supabase = createClient(await cookies());
 
-  const { error } = await supabase
+  const { data: arr, error } = await supabase
     .from("notes")
     .update({ ...data, updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id).select();
 
   if (error) {
     return { success: false, message: error.message };
   }
 
-  return { success: true, message: "Updated successfully!" };
+  return { success: true, data: arr?.[0] };
 }
 
 export async function remove(id) {
@@ -213,10 +245,14 @@ export async function remove(id) {
 
   const supabase = createClient(await cookies());
 
-  const { error } = await supabase.from("notes").delete().eq("id", id);
+  // deleting any row of shared that references this note
+  const { error: sharedError } = await supabase.rpc("remove_references", {
+    note_id: id
+  });
+  const { error: notesError } = await supabase.from("notes").delete().eq("id", id);
 
-  if (error) {
-    return { success: false, message: error.message };
+  if (sharedError || notesError) {
+    return { success: false, message: sharedError?.message ?? notesError?.message };
   }
 
   return { success: true };

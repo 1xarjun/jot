@@ -13,7 +13,6 @@ import {
   MoreVertical,
   Edit2,
   Trash2,
-  Eye,
   Share,
   Pin,
   PinOff,
@@ -23,16 +22,17 @@ import { useState } from "react";
 import { useNotesStore } from "@/context/notes-store-context";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
+import { useMutation } from "@tanstack/react-query";
+import { remove, update } from "@/app/actions/notes";
+import { queryClient } from "@/query/client";
+import { toast } from "sonner";
+import { removeFromCache, shiftTo } from "@/query/helper";
 
 export default function Note({ note }) {
   const noteRef = useRef(null);
-
-  const {
-    deleteNote,
-    setShareDialogIsOpen,
-    editNote,
-    setSelectedNoteForSharing
-  } = useNotesStore((s) => s.actions);
+  const { setShareDialogIsOpen, setSelectedNoteForSharing } = useNotesStore(
+    (s) => s.actions,
+  );
 
   const [editing, setEditing] = useState(false);
   const router = useRouter();
@@ -40,10 +40,41 @@ export default function Note({ note }) {
   const { id: focusingNoteId } = useParams();
   const { user } = useAuth();
 
-  const handleDelete = (note) => {
-    deleteNote(note.id);
-    if (focusingNoteId === note.id) router.replace("/");
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async ({ id }) => {
+      const { success, message } = await remove(id);
+      if (!success) throw new Error(message);
+    },
+
+    onSuccess: (_, variables) => {
+      if (focusingNoteId === variables.id) router.replace("/");
+      // this is safe to run even if the cache doesn't exist
+      queryClient.removeQueries({ queryKey: ["note", variables.id], exact: true });
+      removeFromCache(["filtered_notes"], variables.id);
+      removeFromCache(["pinned_notes"], variables.id);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const { success, message, data: $ } = await update(id, data);
+      if (!success) throw new Error(message);
+      return $;
+    },
+
+    onSuccess: (updatedNote, variables) => {
+      queryClient.setQueryData(["note", variables.id], (prev) => ({
+        ...prev,
+        ...updatedNote,
+      }));
+      removeFromCache(['filtered_notes'], variables.id);
+      removeFromCache(['pinned_notes'], variables.id);
+      updatedNote?.pinned ? shiftTo(['pinned_notes'], updatedNote) : shiftTo(['filtered_notes'], updatedNote);
+    },
+
+    onError: (error) => toast.error(error.message),
+  });
 
   const handleRename = (e) => {
     e.stopPropagation();
@@ -65,7 +96,7 @@ export default function Note({ note }) {
         return setTitle(note.title);
       }
       setEditing(false);
-      editNote(note.id, { title });
+      updateMutation.mutate({ id: note.id, data: { title } });
     }
   };
 
@@ -75,7 +106,7 @@ export default function Note({ note }) {
       return setTitle(note.title);
     }
     setEditing(false);
-   editNote(note.id, { title });
+    updateMutation.mutate({ id: note.id, data: { title } });
   };
 
   return (
@@ -99,8 +130,8 @@ export default function Note({ note }) {
 
       <DropdownMenu>
         <DropdownMenuTrigger
-        className="md:opacity-0 md:group-hover/item:opacity-100 md:group-focus-visible/item:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100"
-        render={
+          className="md:opacity-0 md:group-hover/item:opacity-100 md:group-focus-visible/item:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100"
+          render={
             <Button
               size="icon-xs"
               variant="ghost"
@@ -115,7 +146,11 @@ export default function Note({ note }) {
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
-                editNote(note.id, { pinned: !note.pinned });
+                // fix this mutation, currently the update is showing only after a full-refresh
+                updateMutation.mutate({
+                  id: note.id,
+                  data: { pinned: !note.pinned },
+                });
               }}
             >
               {note.pinned ? (
@@ -131,10 +166,11 @@ export default function Note({ note }) {
             <DropdownMenuItem
               disabled={!user}
               onClick={(e) => {
-                e.stopPropagation() // stop invoking parent
-                setSelectedNoteForSharing(note)
-                setShareDialogIsOpen(true)
-              }}>
+                e.stopPropagation(); // stop invoking parent
+                setSelectedNoteForSharing(note);
+                setShareDialogIsOpen(true);
+              }}
+            >
               <Share /> Share
             </DropdownMenuItem>
 
@@ -148,7 +184,7 @@ export default function Note({ note }) {
               variant="destructive"
               onClick={(e) => {
                 e.stopPropagation();
-                handleDelete(note);
+                deleteMutation.mutate({ id: note.id });
               }}
             >
               <Trash2 /> Delete
@@ -159,3 +195,94 @@ export default function Note({ note }) {
     </>
   );
 }
+
+// if (!note?.pinned) {
+//   if (updatedNote?.pinned) {
+//     // shift this note to pinned
+//     const note = queryClient
+//       .getQueryData(["filtered_notes"])?.pages.flatMap(page => page.notes)
+//       .find((n) => n.id === variables.id);
+//
+//     if (note) {
+//       queryClient.setQueryData(["filtered_notes"], (prev) => {
+//         if (!prev) return prev;
+//         return {
+//           ...prev,
+//           pages: prev.pages.map((page) => ({
+//             ...page,
+//             notes: page.notes.filter((n) => n.id !== note.id),
+//           })),
+//         };
+//       });
+//
+//       queryClient.setQueryData(["pinned_notes"], (prev) => {
+//         if (!prev) return prev;
+//         return {
+//           ...prev,
+//           pages: prev.pages.map((page) => ({
+//             ...page,
+//             notes: [...page.notes, {...note, ...updatedNote}],
+//           })),
+//         };
+//       });
+//     }
+//   } else {
+//     queryClient.setQueryData(["filtered_notes"], (prev) => {
+//       if (!prev) return prev;
+//       return {
+//         ...prev,
+//         pages: prev.pages.map((page) => ({
+//           ...page,
+//           notes: page.notes.map((note) =>
+//             note.id === variables.id ? { ...note, ...updatedNote } : note,
+//           ),
+//         })),
+//       };
+//     });
+//   }
+// } else {
+//   if (!updatedNote?.pinned) {
+//     // shift this note to filtered
+//     const note = queryClient
+//       .getQueryData(["pinned_notes"])?.pages.flatMap(page => page.notes)
+//       .find((n) => n.id === variables.id);
+//
+//     if (note) {
+//       // filter out from the pinned and add it to the filtered
+//       queryClient.setQueryData(["pinned_notes"], (prev) => {
+//         if (!prev) return prev;
+//         return {
+//           ...prev,
+//           pages: prev.pages.map((page) => ({
+//             ...page,
+//             notes: page.notes.filter((n) => n.id !== variables.id),
+//           })),
+//         };
+//       });
+//
+//       queryClient.setQueryData(["filtered_notes"], (prev) => {
+//         if (!prev) return prev;
+//         return {
+//           ...prev,
+//           pages: prev.pages.map((page) => ({
+//             ...page,
+//             notes: [...page.notes, { ...note, ...updatedNote }],
+//           })),
+//         };
+//       });
+//     }
+//   } else {
+//     queryClient.setQueryData(["pinned_notes"], (prev) => {
+//       if (!prev) return prev;
+//       return {
+//         ...prev,
+//         pages: prev.pages.map((page) => ({
+//           ...page,
+//           notes: page.notes.map((note) =>
+//             note.id === variables.id ? { ...note, ...updatedNote } : note,
+//           ),
+//         })),
+//       };
+//     });
+//   }
+// }

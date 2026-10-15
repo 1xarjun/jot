@@ -8,6 +8,8 @@ import { SidebarHeader, SidebarTrigger, useSidebar } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import Logo from "./logo";
 import Add from "../add";
+import { queryClient } from "@/query/client";
+import { useNotesStore } from "@/context/notes-store-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,17 +18,28 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { useNotesStore } from "@/context/notes-store-context";
 
 export default function Header() {
   const { isMobile, state } = useSidebar();
   const expanded = isMobile || state === "expanded";
-  const { setSearchOpen: setOpen } = useNotesStore((s) => s.actions);
-  const notes = useNotesStore((s) => s.notes);
+  const setOpen = useNotesStore((s) => s.actions.setSearchOpen);
   const { debouncedEdit } = useCurrentEditor();
 
-  const pinnedNotes = notes?.filter((note) => note.pinned).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 6) ?? [];
-  const recentNotes = notes?.filter((note) => !note.pinned).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 6) ?? [];
+  const filteredNotes = queryClient
+    .getQueryData(["filtered_notes"])
+    ?.pages?.flatMap((page) => page.notes || []) || [];
+  const pinnedNotes = queryClient
+    .getQueryData(["pinned_notes"])
+    ?.pages?.flatMap((page) => page.notes || []) || [];
+
+  const sortByUpdatedAt = (a, b) => new Date(b.updated_at) - new Date(a.updated_at);
+  const recentNotes = filteredNotes
+    .filter((note) => !note.pinned)
+    .sort(sortByUpdatedAt)
+    .slice(0, 5);
+  const recentPinnedNotes = pinnedNotes
+    .sort(sortByUpdatedAt)
+    .slice(0, 5);
 
   return (
     <SidebarHeader
@@ -103,7 +116,7 @@ export default function Header() {
               <DropdownMenuContent side="right" align="start" className="w-64">
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>Pinned</DropdownMenuLabel>
-                  {pinnedNotes.length === 0 ? (
+                  {recentPinnedNotes.length === 0 ? (
                     <DropdownMenuItem
                       disabled
                       className="text-muted-foreground text-xs"
@@ -111,7 +124,7 @@ export default function Header() {
                       No pinned notes
                     </DropdownMenuItem>
                   ) : (
-                    pinnedNotes.map((note) => (
+                    recentPinnedNotes.map((note) => (
                       <DropdownMenuItem
                         key={note.id}
                         render={
