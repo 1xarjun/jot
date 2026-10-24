@@ -13,31 +13,48 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { fetchNotes } from "@/app/actions/notes";
 import { toast } from "sonner";
 import NotesSkeleton from "./skeletons/notes-skeleton";
+import { useNotesStore } from "@/context/notes-store-context";
+import { useAuth } from "@/context/AuthProvider";
+import { createClient } from "@/utils/supabase/client";
 
 export default function FilteredNotes() {
   const { id } = useParams();
   const { debouncedEdit } = useCurrentEditor();
   const [showNotes, setShowNotes] = useState(true);
+  const zNotes = useNotesStore((s) => s.notes);
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage, error } = useInfiniteQuery({
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    error,
+  } = useInfiniteQuery({
     queryKey: ["filtered_notes"],
     queryFn: async ({ pageParam: cursor }) => {
+	const supabase = createClient();
+	const { data: { session } } = await supabase.auth.getSession(); 
+	if (!session?.user) {
+        const filtered = zNotes.filter((z) => !z.pinned);
+        return { notes: filtered, cursor: null };
+      }
       const { success, message, data } = await fetchNotes(cursor);
-      if (!success) throw new Error(message)
+      if (!success) throw new Error(message);
       return data;
     },
     initialPageParam: null,
-    getNextPageParam: (prevResponse) => prevResponse?.cursor
-  })
+    getNextPageParam: (prevResponse) => prevResponse?.cursor,
+  });
 
   useEffect(() => {
-    if(error) toast.error(error.message)
-  }, [error])
+    if (error) toast.error(error.message);
+  }, [error]);
 
-  if(isLoading) return <NotesSkeleton />
+  if (isLoading) return <NotesSkeleton />;
 
   // flattens the notes => notes array of each page is grabbed and joined
-  const notes = data?.pages.flatMap(page => page.notes)
+  const notes = data?.pages.flatMap((page) => page.notes);
 
   return (
     <div className="group/notes">
@@ -50,7 +67,9 @@ export default function FilteredNotes() {
           <span
             className={cn(
               "transition-opacity",
-              showNotes ? "opacity-0 group-hover/notes:opacity-100 group-focus-visible/button:opacity-100" : "opacity-100"
+              showNotes
+                ? "opacity-0 group-hover/notes:opacity-100 group-focus-visible/button:opacity-100"
+                : "opacity-100",
             )}
           >
             {showNotes ? (

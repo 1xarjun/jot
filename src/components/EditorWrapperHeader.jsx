@@ -79,6 +79,10 @@ export default function EditorWrapperHeader({
 
   const deleteMutation = useMutation({
     mutationFn: async ({ id }) => {
+      if (!user) {
+        deleteNote(id);
+        return;
+      }
       const { success, message } = await remove(id);
       if (!success) throw new Error(message);
     },
@@ -97,6 +101,18 @@ export default function EditorWrapperHeader({
   const createMutation = useMutation({
     mutationFn: async ({ title, content }) => {
       if (!title) throw new Error('Invalid title');
+      if (!user) {
+        const note = {
+          id: `${Date.now()}-${Math.random().toString(36)}`,
+          title,
+          content,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          pinned: false,
+        };
+        saveNote(note);
+        return note;
+      }
       const { data, success, message } = await create({ title, content });
       if (!success) throw new Error(message);
       return data;
@@ -109,6 +125,10 @@ export default function EditorWrapperHeader({
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
+      if (!user) {
+        editNote(id, data);
+        return { ...focusingNote, ...data, updated_at: new Date().toISOString() };
+      }
       const { success, message, data: $ } = await update(id, data);
       if (!success) throw new Error(message);
       return $;

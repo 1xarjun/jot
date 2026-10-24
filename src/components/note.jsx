@@ -30,7 +30,7 @@ import { removeFromCache, shiftTo } from "@/query/helper";
 
 export default function Note({ note }) {
   const noteRef = useRef(null);
-  const { setShareDialogIsOpen, setSelectedNoteForSharing } = useNotesStore(
+  const { setShareDialogIsOpen, setSelectedNoteForSharing, editNote, deleteNote } = useNotesStore(
     (s) => s.actions,
   );
 
@@ -42,6 +42,10 @@ export default function Note({ note }) {
 
   const deleteMutation = useMutation({
     mutationFn: async ({ id }) => {
+      if (!user) {
+        deleteNote(id);
+        return;
+      }
       const { success, message } = await remove(id);
       if (!success) throw new Error(message);
     },
@@ -58,6 +62,10 @@ export default function Note({ note }) {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
+      if (!user) {
+        editNote(id, data);
+        return { ...note, ...data, updated_at: new Date().toISOString() };
+      }
       const { success, message, data: $ } = await update(id, data);
       if (!success) throw new Error(message);
       return $;

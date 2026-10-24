@@ -12,31 +12,47 @@ import { fetchPinnedNotes } from "@/app/actions/notes";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import NotesSkeleton from "./skeletons/notes-skeleton";
+import { useNotesStore } from "@/context/notes-store-context";
+import { createClient } from "@/utils/supabase/client";
 
 export default function PinnedNotes() {
   const { id } = useParams();
   const { debouncedEdit } = useCurrentEditor();
   const [showPinned, setShowPinned] = useState(true);
+  const zNotes = useNotesStore((s) => s.notes);
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage, error } = useInfiniteQuery({
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    error,
+  } = useInfiniteQuery({
     queryKey: ["pinned_notes"],
     queryFn: async ({ pageParam: cursor }) => {
+	const supabase = createClient();
+	const { data: { session} } = await supabase.auth.getSession();
+	if (!session?.user) {
+        const pinned = zNotes.filter((z) => z.pinned);
+        return { notes: pinned, cursor: null };
+      }
       const { success, message, data } = await fetchPinnedNotes(cursor);
-      if (!success) throw new Error(message)
+      if (!success) throw new Error(message);
       return data;
     },
     initialPageParam: null,
-    getNextPageParam: (prevResponse) => prevResponse?.cursor
-  })
+    getNextPageParam: (prevResponse) => prevResponse?.cursor,
+  });
 
   useEffect(() => {
-    if(error) toast.error(error.message)
-  }, [error])
+    if (error) toast.error(error.message);
+  }, [error]);
 
-  if (isLoading) return <NotesSkeleton />
+  if (isLoading) return <NotesSkeleton />;
 
   // flattens the notes => notes array of each page is grabbed and joined
-  const notes = data?.pages.flatMap(page => page.notes)
+  const notes = data?.pages.flatMap((page) => page.notes);
 
   return notes?.length > 0 ? (
     <div className="group/pinned">
@@ -49,7 +65,9 @@ export default function PinnedNotes() {
           <span
             className={cn(
               "transition-opacity",
-              showPinned ? "opacity-0 group-hover/pinned:opacity-100 group-focus-visible/button:opacity-100" : "opacity-100"
+              showPinned
+                ? "opacity-0 group-hover/pinned:opacity-100 group-focus-visible/button:opacity-100"
+                : "opacity-100",
             )}
           >
             {showPinned ? (
@@ -71,9 +89,7 @@ export default function PinnedNotes() {
               className={cn(
                 buttonVariants({ variant: "ghost" }),
                 `w-full px-2.5 group/item ${
-                  id === note.id
-                    ? "bg-accent dark:bg-accent/50"
-                    : ""
+                  id === note.id ? "bg-accent dark:bg-accent/50" : ""
                 } gap-0.5 font-normal`,
               )}
             >

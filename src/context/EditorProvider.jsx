@@ -10,17 +10,28 @@ import { useMutation } from "@tanstack/react-query";
 import { update } from "@/app/actions/notes";
 import { toast } from "sonner";
 import { queryClient } from "@/query/client";
+import { useAuth } from "./AuthProvider";
+import { useNotesStore } from "./notes-store-context";
 
 export default function EditorProvider({ children }) {
   const { id: focusingNoteId } = useParams();
+  const { user } = useAuth();
+  const { editNote } = useNotesStore((s) => s.actions);
   const { mutate: updateNote } = useMutation({
     mutationFn: async ({ id, data }) => {
+      if (!user) {
+        editNote(id, data);
+        return { id, ...data, updated_at: new Date().toISOString() };
+      }
       const { success, message, data: updatedNote } = await update(id, data);
       if (!success) throw new Error(message);
       return updatedNote;
     },
     // here data is what i returned in mutationFn, variables is what i passed in .mutate
-    onSuccess: (updatedNote, variables) => queryClient.setQueryData(["note", variables.id], updatedNote),
+    onSuccess: (updatedNote, variables) =>
+      queryClient.setQueryData(["note", variables.id], (prev) =>
+        prev ? { ...prev, ...updatedNote } : updatedNote
+      ),
     onError: (error) => toast.error(error.message)
   });
 

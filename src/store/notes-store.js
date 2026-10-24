@@ -48,77 +48,77 @@ export const createNotesStore = (defaultState = {}) => {
         if (!note.title) return toast.error("Title is required");
         set((state) => ({ notes: [...state.notes, note] }));
 
-        const supabase = createClient();
+        // const supabase = createClient();
 
-        const {
-          data: {
-            session,
-          },
-        } = await supabase.auth.getSession();
+        // const {
+        //   data: {
+        //     session,
+        //   },
+        // } = await supabase.auth.getSession();
 
-        if (!session?.user) return;
+        // if (!session?.user) return;
 
-        const { data, success, message } = await createNote({
-          title: note.title,
-          content: note.content
-        });
+        // const { data, success, message } = await createNote({
+        //   title: note.title,
+        //   content: note.content
+        // });
 
-        if (!success) {
-          set((state) => ({
-            notes: state.notes.filter((n) => n.id !== note.id),
-          }));
-          toast.error(message);
-        } else {
-          set((state) => ({
-            notes: state.notes.map((n) => (n.id === note.id ? data : n)),
-          }));
-        }
+        // if (!success) {
+        //   set((state) => ({
+        //     notes: state.notes.filter((n) => n.id !== note.id),
+        //   }));
+        //   toast.error(message);
+        // } else {
+        //   set((state) => ({
+        //     notes: state.notes.map((n) => (n.id === note.id ? data : n)),
+        //   }));
+        // }
       },
 
       editNote: async (id, data) => {
         const { notes } = get();
-        const note = notes.find((n) => n.id === id);
+        {/* const note = notes.find((n) => n.id === id);*/}
         set({ notes: notes.map((n) => (id === n.id ? { ...n, ...data, updated_at: new Date().toISOString() } : n)) });
 
-        const supabase = createClient();
-        const {
-          data: {
-            session,
-          },
-        } = await supabase.auth.getSession();
+        // const supabase = createClient();
+        // const {
+        //   data: {
+        //     session,
+        //   },
+        // } = await supabase.auth.getSession();
 
-        if (!session?.user) return;
+        // if (!session?.user) return;
 
-        const { success, message } = await update(id, data);
+        // const { success, message } = await update(id, data);
 
-        if (!success) {
-          set({ notes: notes.map((n) => (n.id === id ? note : n)) });
-          toast.error(message);
-        }
+        // if (!success) {
+        //   set({ notes: notes.map((n) => (n.id === id ? note : n)) });
+        //   toast.error(message);
+        // }
       },
 
       deleteNote: async (id) => {
         const { notes } = get();
 
-        const note = notes.find((n) => n.id === id);
+        {/* const note = notes.find((n) => n.id === id);*/}
 
         set({
           notes: notes.filter((note) => note.id !== id),
         });
 
-        const supabase = createClient();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        // const supabase = createClient();
+        // const {
+        //   data: { session },
+        // } = await supabase.auth.getSession();
 
-        if (!session?.user) return;
+        // if (!session?.user) return;
 
-        const { success, message } = await remove(id);
+        // const { success, message } = await remove(id);
 
-        if (!success) {
-          set({ notes: [...notes, note] });
-          toast.error(message);
-        }
+        // if (!success) {
+        //   set({ notes: [...notes, note] });
+        //   toast.error(message);
+        // }
       },
 
       setShareDialogIsOpen: (open) => {

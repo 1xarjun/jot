@@ -20,7 +20,7 @@ export default async function RootLayout({ children }) {
 //     ]);
 //
     return (
-      <NotesStoreProvider initialValue={{ notes: [], shared: [] }}>
+      //<NotesStoreProvider initialValue={{ notes: [], shared: [] }}>
         <EditorProvider>
           <div className="text-sm text-foreground bg-background w-full h-dvh overflow-hidden flex">
             <SidebarWrapper>
@@ -36,6 +36,6 @@ export default async function RootLayout({ children }) {
             <main className="w-full">{children}</main>
           </div>
         </EditorProvider>
-      </NotesStoreProvider>
+      //</NotesStoreProvider>
     );
 }

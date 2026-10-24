@@ -26,15 +26,31 @@ import { useMutation } from "@tanstack/react-query";
 import { create } from "@/app/actions/notes";
 import { shiftTo } from "@/query/helper";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthProvider";
 
 export default function Add() {
   const titleFormRef = useRef(null);
   const { state, isMobile } = useSidebar();
   const { saveNote } = useNotesStore(s=> s.actions);
   const collapsed = !isMobile && state === "collapsed";
+  const { user } = useAuth();
 
   const createMutation = useMutation({
     mutationFn: async ({ title, content }) => {
+      if (!user) {
+        if (!title) throw new Error("Title must be valid");
+        const note = {
+          id: `${Date.now()}-${Math.random().toString(36)}`,
+          title,
+          content: undefined ,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          pinned: false,
+        };
+        saveNote(note);
+        return note;
+      }
+
       const { data, success, message } = await create({ title, content });
       if (!success) throw new Error(message);
       return data;

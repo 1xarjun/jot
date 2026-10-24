@@ -18,6 +18,7 @@ import { Dot, NotepadText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { queryClient } from "@/query/client";
+import { useAuth } from "@/context/AuthProvider";
 
 export default function Search() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function Search() {
   const setOpen = useNotesStore((s) => s.actions.setSearchOpen);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { user } = useAuth();
+  const zNotes = useNotesStore((s) => s.notes);
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(search), 300);
@@ -38,7 +41,13 @@ export default function Search() {
     isError: searchError,
   } = useQuery({
     queryKey: ["note-search", debouncedSearch.trim()],
-    queryFn: () => searchNotes(debouncedSearch),
+    queryFn: () => {
+      if (!user) {
+	const result = zNotes.filter(z => z.title.toLowerCase().includes(debouncedSearch.toLowerCase())).sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0,5);
+	return { success: true, data: result ?? [] }; 
+      }
+      return searchNotes(debouncedSearch);
+    },
     enabled: Boolean(debouncedSearch.trim()),
   });
 

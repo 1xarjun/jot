@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { usePathname } from "next/navigation";
+import { queryClient } from "@/query/client";
+import { useNotesStore } from "@/context/notes-store-context";
 
 export const AuthContext = createContext(null); // initially null
 
@@ -11,17 +13,18 @@ export default function AuthProvider({ children }) {
 	const [user, setUser] = useState(null);
 	const supabase = createClient();
 	const pathname = usePathname();
+	const reset = useNotesStore((state) => state.actions.reset);
 
 	useEffect(() => {
 
 		const fetchUser = async () => { // get session data from the cookie sent by supabase
 
-      // TODO: this is providing stale data when doing local login
+			// TODO: this is providing stale data when doing local login
 			const { data, error } = await supabase.auth.getSession();
 
 			if (error) {
-        console.error('Error fetching session: ', error.message);
-      } else {
+				console.error('Error fetching session: ', error.message);
+			} else {
 				setUser(data.session?.user || null);
 			}
 		}
@@ -30,6 +33,10 @@ export default function AuthProvider({ children }) {
 
 		// basically sets a listener for detecting logins/logouts/session-expire etc. and then update the user accordingly
 		const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+			if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
+				queryClient.removeQueries();
+				reset(); 
+			}
 			setUser(session?.user || null);
 		});
 
@@ -39,7 +46,7 @@ export default function AuthProvider({ children }) {
 
 	return (
 		<AuthContext.Provider value={{ user, setUser }} >
-			{children}
+		{children}
 		</AuthContext.Provider>
 	);
 }

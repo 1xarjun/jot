@@ -12,10 +12,16 @@ import { useQuery } from "@tanstack/react-query";
 import { getNoteById, getSharedNoteByToken } from "@/app/actions/notes";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
+import { useAuth } from "@/context/AuthProvider";
+import { queryClient } from "@/query/client";
+import { useNotesStore } from "@/context/notes-store-context";
+import { createClient } from "@/utils/supabase/client";
 
 export default function EditorWrapper({ id = undefined, token = undefined }) {
   const { editor } = useCurrentEditor();
   const router = useRouter();
+  const { user } = useAuth();
+  const zNotes = useNotesStore(s => s.notes);
 
   const {
     data: note,
@@ -24,6 +30,16 @@ export default function EditorWrapper({ id = undefined, token = undefined }) {
   } = useQuery({
     queryKey: ["note", id],
     queryFn: async () => {
+	const supabase = createClient();
+	const { data: { session } } = await supabase.auth.getSession();
+	if (!session?.user) {
+          const note = zNotes.find(z => z.id === id);
+	  if (!note) {
+	    router.replace("/");
+	    return {};	
+	  };
+	  return note;
+        }
       const { success, data, message } = await getNoteById(id);
       if (!success)
         throw new Error(message ?? "Error while getting note by id");
