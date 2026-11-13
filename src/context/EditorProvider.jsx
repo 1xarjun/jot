@@ -17,6 +17,7 @@ export default function EditorProvider({ children }) {
   const { id: focusingNoteId } = useParams();
   const { user } = useAuth();
   const { editNote } = useNotesStore((s) => s.actions);
+
   const { mutate: updateNote } = useMutation({
     mutationFn: async ({ id, data }) => {
       if (!user) {

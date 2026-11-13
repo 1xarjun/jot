@@ -17,10 +17,10 @@ export async function handleEmailLogin(formData) {
 
 	if (error) {
 		console.error('error while logging in through email: ', error.message);
-    return redirect(`/login?error=${encodeURIComponent(error.message)}&t=${Date.now()}`)
+		return { success: false, message: error.message };
 	}
 
-	return redirect("/");
+	return { success: true };
 }
 
 export async function handleSignUp(formData) {
@@ -37,17 +37,15 @@ export async function handleSignUp(formData) {
 		},
 	};
 
-
 	const { error } = await supabase.auth.signUp(data);
 
 	// email confirmation is off so it will return a authenticated session if everything is okay it will go to /
 
   if (error) {
     console.error('error while signing up through email: ', error.message);
-    return redirect(`/signup?error=${encodeURIComponent(error.message)}&t=${Date.now()}`)
+    return { success: false, message: error.message };
   }
-
-  return redirect("/");
+  return { success: true };
 }
 
 export async function handleSignOut() {

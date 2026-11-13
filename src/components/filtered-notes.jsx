@@ -22,6 +22,7 @@ export default function FilteredNotes() {
   const { debouncedEdit } = useCurrentEditor();
   const [showNotes, setShowNotes] = useState(true);
   const zNotes = useNotesStore((s) => s.notes);
+  const { user } = useAuth();
 
   const {
     data,
@@ -33,9 +34,11 @@ export default function FilteredNotes() {
   } = useInfiniteQuery({
     queryKey: ["filtered_notes"],
     queryFn: async ({ pageParam: cursor }) => {
-	const supabase = createClient();
-	const { data: { session } } = await supabase.auth.getSession(); 
-	if (!session?.user) {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) {
         const filtered = zNotes.filter((z) => !z.pinned);
         return { notes: filtered, cursor: null };
       }

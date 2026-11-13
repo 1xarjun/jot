@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useRef } from "react";
 import { useState } from "react";
-import { useNotesStore } from "@/context/notes-store-context";
+import { NotesStoreContext, useNotesStore } from "@/context/notes-store-context";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { useMutation } from "@tanstack/react-query";
@@ -27,6 +27,7 @@ import { remove, update } from "@/app/actions/notes";
 import { queryClient } from "@/query/client";
 import { toast } from "sonner";
 import { removeFromCache, shiftTo } from "@/query/helper";
+import { useContext } from "react";
 
 export default function Note({ note }) {
   const noteRef = useRef(null);
@@ -39,6 +40,7 @@ export default function Note({ note }) {
   const [title, setTitle] = useState(note.title);
   const { id: focusingNoteId } = useParams();
   const { user } = useAuth();
+  const store = useContext(NotesStoreContext);
 
   const deleteMutation = useMutation({
     mutationFn: async ({ id }) => {
@@ -64,7 +66,8 @@ export default function Note({ note }) {
     mutationFn: async ({ id, data }) => {
       if (!user) {
         editNote(id, data);
-        return { ...note, ...data, updated_at: new Date().toISOString() };
+	const zNote = store.getState().notes.find(n => n.id === id); 
+        return { ...zNote, ...data, updated_at: new Date().toISOString() };
       }
       const { success, message, data: $ } = await update(id, data);
       if (!success) throw new Error(message);

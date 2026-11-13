@@ -21,7 +21,7 @@ export const createNotesStore = (defaultState = {}) => {
     ...defaultState,
     actions: {
       reset: () => {
-        const { actions } = get();
+	      const { actions } = get();
         set({ ...initialState, actions });
       },
       updateNotes: (newNotesArray) => {
@@ -79,8 +79,7 @@ export const createNotesStore = (defaultState = {}) => {
         const { notes } = get();
         {/* const note = notes.find((n) => n.id === id);*/}
         set({ notes: notes.map((n) => (id === n.id ? { ...n, ...data, updated_at: new Date().toISOString() } : n)) });
-
-        // const supabase = createClient();
+	// const supabase = createClient();
         // const {
         //   data: {
         //     session,

@@ -1,6 +1,4 @@
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -10,11 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Mail } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
-import { handleSignUp } from "../actions/actions";
 import OAuthProviders from "../login/oauth-providers";
+import SignupForm from "./signup-form";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
@@ -46,50 +43,10 @@ export default async function Signup() {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-4">
-          <form id="signup-form" action={handleSignUp} className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                type="text"
-                placeholder="name"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="name@example.com"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-start font-medium text-foreground">
-                <Label htmlFor="password">Password</Label>
-              </div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-              />
-            </div>
-          </form>
+          <SignupForm />
         </CardContent>
 
         <CardFooter className="flex-col gap-2">
-          <Button
-            type="submit"
-            form="signup-form"
-            className="w-full justify-center gap-2"
-          >
-            <Mail />
-            Sign up with Email
-          </Button>
           <OAuthProviders />
         </CardFooter>
       </Card>

@@ -26,6 +26,7 @@ import { Check } from "lucide-react";
 import { useTheme } from "@/context/ThemeProvider";
 import { createClient } from "@/utils/supabase/client";
 import { useNotesStore } from "@/context/notes-store-context";
+import { queryClient } from "@/query/client";
 
 export default function SidebarUser({ user }) {
   const router = useRouter();
@@ -38,8 +39,10 @@ export default function SidebarUser({ user }) {
   const handleLogOut = async () => {
     await handleSignOut(); //server
     await supabase.auth.signOut(); //client
-    resetStore();
-    router.replace("/")
+    // queryClient.clear();
+    // resetStore();
+    // router.replace("/")
+    // router.refresh();
   };
 
   return (

@@ -2,18 +2,12 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { usePathname } from "next/navigation";
-import { queryClient } from "@/query/client";
-import { useNotesStore } from "@/context/notes-store-context";
-
 export const AuthContext = createContext(null); // initially null
 
 export default function AuthProvider({ children }) {
 
 	const [user, setUser] = useState(null);
 	const supabase = createClient();
-	const pathname = usePathname();
-	const reset = useNotesStore((state) => state.actions.reset);
 
 	useEffect(() => {
 
@@ -33,16 +27,17 @@ export default function AuthProvider({ children }) {
 
 		// basically sets a listener for detecting logins/logouts/session-expire etc. and then update the user accordingly
 		const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-			if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
-				queryClient.removeQueries();
-				reset(); 
+			if(event==='SIGNED_OUT') {
+				window.location.replace('/');
 			}
-			setUser(session?.user || null);
+
+		setUser(session?.user || null);
 		});
 
 		return () => listener.subscription.unsubscribe(); // cleans up listener when react unmounts this component
 
-	}, [pathname])
+	}, []);
+
 
 	return (
 		<AuthContext.Provider value={{ user, setUser }} >

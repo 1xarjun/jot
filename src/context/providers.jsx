@@ -8,12 +8,13 @@ import { Toaster } from "sonner";
 import { Suspense } from "react";
 import Error from "@/components/error";
 import { queryClient } from "@/query/client";
+import { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import NotesStoreProvider from "@/context/notes-store-provider";
 
 export default function Providers({ children }) {
   const { theme } = useTheme();
-
+  
   return (
     <QueryClientProvider client={queryClient}>
       <NotesStoreProvider>

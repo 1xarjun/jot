@@ -14,12 +14,14 @@ import { toast } from "sonner";
 import NotesSkeleton from "./skeletons/notes-skeleton";
 import { useNotesStore } from "@/context/notes-store-context";
 import { createClient } from "@/utils/supabase/client";
+import { useAuth } from "@/context/AuthProvider";
 
 export default function PinnedNotes() {
   const { id } = useParams();
   const { debouncedEdit } = useCurrentEditor();
   const [showPinned, setShowPinned] = useState(true);
   const zNotes = useNotesStore((s) => s.notes);
+  const { user } = useAuth();
 
   const {
     data,
